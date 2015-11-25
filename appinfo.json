@@ -1,0 +1,49 @@
+{
+    "appKeys": {},
+    "capabilities": [
+        ""
+    ],
+    "companyName": "gawley@gmail.com",
+    "longName": "PippaWatch",
+    "projectType": "native",
+    "resources": {
+        "media": [
+            {
+                "file": "fonts/HelveticaNeue.ttf",
+                "name": "FONT_HELV_12",
+                "type": "font"
+            },
+            {
+                "file": "images/bt-icon.png",
+                "name": "IMAGE_BT_ICON",
+                "type": "png"
+            },
+            {
+                "file": "fonts/HelveticaNeue-Bold.ttf",
+                "name": "FONT_HELV_BOLD_12",
+                "type": "font"
+            },
+            {
+                "file": "fonts/HelveticaNeue-Bold.ttf",
+                "name": "FONT_HELV_BOLD_16",
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9: ]",
+                "file": "fonts/HelveticaNeue-Bold.ttf",
+                "name": "FONT_HELV_BOLD_SUBSET_48",
+                "type": "font"
+            }
+        ]
+    },
+    "sdkVersion": "3",
+    "shortName": "PippaWatch",
+    "targetPlatforms": [
+        "basalt"
+    ],
+    "uuid": "1c2265b9-5862-48bb-9002-5310a5fbaf8d",
+    "versionLabel": "1.0",
+    "watchapp": {
+        "watchface": true
+    }
+}
