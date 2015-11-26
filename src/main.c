@@ -14,6 +14,8 @@ GFont helv_xsm;
 
 GBitmap *bt_icon_bitmap;
 
+int SCREEN_WIDTH = PBL_IF_RECT_ELSE(144, 180);
+
 void handle_time_change(struct tm *tick_time, TimeUnits units_changed) {
     
   static char time_buffer[10];
@@ -26,6 +28,7 @@ void handle_time_change(struct tm *tick_time, TimeUnits units_changed) {
     strftime(time_buffer, sizeof(time_buffer), "%H:%M", tick_time);
   } else {
     strftime(time_buffer, sizeof(time_buffer), "%l:%M", tick_time);
+    // this little section strips the leading whitespace from timebuffer when hr < 10
     strftime(temp_hour, sizeof(time_buffer), "%I", tick_time);
     hr = atoi(temp_hour);
     if (hr < 10) {
@@ -82,34 +85,34 @@ void handle_init(void) {
   helv_bold_lg = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_HELV_BOLD_SUBSET_48));
   
   // Create the battery layer
-  battery_layer = text_layer_create(GRect(0, 4, 142, 30));
+  battery_layer = text_layer_create(GRect(2, PBL_IF_RECT_ELSE(4,180 - 24), SCREEN_WIDTH - 4, 30));
 	text_layer_set_text(battery_layer, "N/A");
   text_layer_set_background_color(battery_layer, GColorClear);
 	text_layer_set_font(battery_layer, helv_xsm);
   text_layer_set_text_color(battery_layer, GColorDarkGray);
-	text_layer_set_text_alignment(battery_layer, GTextAlignmentRight);
+	text_layer_set_text_alignment(battery_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight, GTextAlignmentCenter));
   
   // Create the BT layer
   bt_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BT_ICON);
-  bt_icon_layer = bitmap_layer_create(GRect(2, 2, 16, 16));
+  bt_icon_layer = bitmap_layer_create(GRect(PBL_IF_RECT_ELSE(2,90 - 8), PBL_IF_RECT_ELSE(2,8), 16, 16));
   bitmap_layer_set_bitmap(bt_icon_layer, bt_icon_bitmap);
   
   // Create the day layer
-  day_layer = text_layer_create(GRect(0, 34, 144, 20));
+  day_layer = text_layer_create(GRect(0, 34, SCREEN_WIDTH, 20));
 	text_layer_set_text(day_layer, "No time!");
 	text_layer_set_font(day_layer, helv_bold_sm);
   text_layer_set_text_color(day_layer, GColorDarkGray);
 	text_layer_set_text_alignment(day_layer, GTextAlignmentCenter);
   
   // Create the time layer
-	time_layer = text_layer_create(GRect(0, 54, 144, 60));
+	time_layer = text_layer_create(GRect(0, 54, SCREEN_WIDTH, 60));
 	text_layer_set_text(time_layer, "No time!");
   text_layer_set_background_color(time_layer, GColorClear);
 	text_layer_set_font(time_layer, helv_bold_lg);
 	text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
   
   // Create the date layer
-	date_layer = text_layer_create(GRect(0, 114, 144, 20));
+	date_layer = text_layer_create(GRect(0, 114, SCREEN_WIDTH, 20));
 	text_layer_set_text(date_layer, "No time!");
   text_layer_set_background_color(date_layer, GColorClear);
   text_layer_set_text_color(date_layer, GColorDarkGray);
@@ -157,6 +160,8 @@ void handle_deinit(void) {
   // Unload fonts
   fonts_unload_custom_font(helv_bold_lg);
   fonts_unload_custom_font(helv_bold_sm);
+  fonts_unload_custom_font(helv_xsm);
+  fonts_unload_custom_font(helv_bold_xsm);
   
   window_destroy(window);
 }
