@@ -39,6 +39,7 @@
     "sdkVersion": "3",
     "shortName": "PippaWatch",
     "targetPlatforms": [
+        "aplite",
         "basalt",
         "chalk"
     ],

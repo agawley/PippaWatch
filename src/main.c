@@ -67,10 +67,10 @@ void handle_battery_change(BatteryChargeState charge_state) {
   text_layer_set_text(battery_layer, s_battery_buffer);
   if (charge_state.charge_percent <= 10) {
     vibes_short_pulse();
-    text_layer_set_text_color(battery_layer, GColorRed);
+    text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorRed, GColorBlack));
     text_layer_set_font(battery_layer, helv_bold_xsm);
   } else {
-    text_layer_set_text_color(battery_layer, GColorDarkGray);
+    text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
     text_layer_set_font(battery_layer, helv_xsm);
   }
 }
@@ -89,7 +89,7 @@ void handle_init(void) {
 	text_layer_set_text(battery_layer, "N/A");
   text_layer_set_background_color(battery_layer, GColorClear);
 	text_layer_set_font(battery_layer, helv_xsm);
-  text_layer_set_text_color(battery_layer, GColorDarkGray);
+  text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
 	text_layer_set_text_alignment(battery_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight, GTextAlignmentCenter));
   
   // Create the BT layer
@@ -101,7 +101,7 @@ void handle_init(void) {
   day_layer = text_layer_create(GRect(0, 34, SCREEN_WIDTH, 20));
 	text_layer_set_text(day_layer, "No time!");
 	text_layer_set_font(day_layer, helv_bold_sm);
-  text_layer_set_text_color(day_layer, GColorDarkGray);
+  text_layer_set_text_color(day_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
 	text_layer_set_text_alignment(day_layer, GTextAlignmentCenter);
   
   // Create the time layer
@@ -115,7 +115,7 @@ void handle_init(void) {
 	date_layer = text_layer_create(GRect(0, 114, SCREEN_WIDTH, 20));
 	text_layer_set_text(date_layer, "No time!");
   text_layer_set_background_color(date_layer, GColorClear);
-  text_layer_set_text_color(date_layer, GColorDarkGray);
+  text_layer_set_text_color(date_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
 	text_layer_set_font(date_layer, helv_bold_sm);
 	text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
