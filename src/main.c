@@ -22,7 +22,7 @@ void handle_time_change(struct tm *tick_time, TimeUnits units_changed) {
   static char date_buffer[20];
   int hr;
   
-  if (false /*clock_is_24h_style()*/) {
+  if (clock_is_24h_style()) {
     strftime(time_buffer, sizeof(time_buffer), "%H:%M", tick_time);
   } else {
     strftime(time_buffer, sizeof(time_buffer), "%l:%M", tick_time);
@@ -63,6 +63,7 @@ void handle_battery_change(BatteryChargeState charge_state) {
   }
   text_layer_set_text(battery_layer, s_battery_buffer);
   if (charge_state.charge_percent <= 10) {
+    vibes_short_pulse();
     text_layer_set_text_color(battery_layer, GColorRed);
     text_layer_set_font(battery_layer, helv_bold_xsm);
   } else {
