@@ -113,7 +113,7 @@ void handle_init(void) {
   
   // Create the BT layer
   bt_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BT_ICON);
-  bt_icon_layer = bitmap_layer_create(GRect(PBL_IF_RECT_ELSE(2,90 - 8), PBL_IF_RECT_ELSE(2,8), bt_width, bt_height));
+  bt_icon_layer = bitmap_layer_create(GRect(bt_x_pos, bt_y_pos, bt_width, bt_height));
   bitmap_layer_set_bitmap(bt_icon_layer, bt_icon_bitmap);
   
   // Create the day layer
