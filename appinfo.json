@@ -4,7 +4,7 @@
         ""
     ],
     "companyName": "gawley@gmail.com",
-    "longName": "PippaWatch",
+    "longName": "Very Simple Watch",
     "projectType": "native",
     "resources": {
         "media": [
@@ -37,7 +37,7 @@
         ]
     },
     "sdkVersion": "3",
-    "shortName": "PippaWatch",
+    "shortName": "VSW",
     "targetPlatforms": [
         "aplite",
         "basalt",
@@ -46,6 +46,6 @@
     "uuid": "1c2265b9-5862-48bb-9002-5310a5fbaf8d",
     "versionLabel": "1.3",
     "watchapp": {
-        "watchface": false
+        "watchface": true
     }
 }

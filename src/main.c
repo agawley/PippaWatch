@@ -105,11 +105,11 @@ void handle_init(void) {
   
   // Create the battery layer
   battery_layer = text_layer_create(GRect(battery_x_pos, battery_y_pos, battery_width, battery_height));
-	text_layer_set_text(battery_layer, "N/A");
+  text_layer_set_text(battery_layer, "N/A");
   text_layer_set_background_color(battery_layer, GColorClear);
-	text_layer_set_font(battery_layer, helv_xsm);
+  text_layer_set_font(battery_layer, helv_xsm);
   text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
-	text_layer_set_text_alignment(battery_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight, GTextAlignmentCenter));
+  text_layer_set_text_alignment(battery_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight, GTextAlignmentCenter));
   
   // Create the BT layer
   bt_icon_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_BT_ICON);
@@ -118,30 +118,30 @@ void handle_init(void) {
   
   // Create the day layer
   day_layer = text_layer_create(GRect(0, day_y_pos, SCREEN_WIDTH, day_height));
-	text_layer_set_text(day_layer, "No time!");
-	text_layer_set_font(day_layer, helv_bold_sm);
+  text_layer_set_text(day_layer, "No time!");
+  text_layer_set_font(day_layer, helv_bold_sm);
   text_layer_set_text_color(day_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
-	text_layer_set_text_alignment(day_layer, GTextAlignmentCenter);
+  text_layer_set_text_alignment(day_layer, GTextAlignmentCenter);
   
   // Create the time layer
-	time_layer = text_layer_create(GRect(0, time_y_pos, SCREEN_WIDTH, time_height));
-	text_layer_set_text(time_layer, "No time!");
+  time_layer = text_layer_create(GRect(0, time_y_pos, SCREEN_WIDTH, time_height));
+  text_layer_set_text(time_layer, "No time!");
   text_layer_set_background_color(time_layer, GColorClear);
-	text_layer_set_font(time_layer, helv_bold_lg);
-	text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
+  text_layer_set_font(time_layer, helv_bold_lg);
+  text_layer_set_text_alignment(time_layer, GTextAlignmentCenter);
   
   // Create the date layer
-	date_layer = text_layer_create(GRect(0, date_y_pos, SCREEN_WIDTH, date_height));
-	text_layer_set_text(date_layer, "No time!");
+  date_layer = text_layer_create(GRect(0, date_y_pos, SCREEN_WIDTH, date_height));
+  text_layer_set_text(date_layer, "No time!");
   text_layer_set_background_color(date_layer, GColorClear);
   text_layer_set_text_color(date_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
-	text_layer_set_font(date_layer, helv_bold_sm);
-	text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
+  text_layer_set_font(date_layer, helv_bold_sm);
+  text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
   // Add the layers to the window
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bt_icon_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(battery_layer));
-	layer_add_child(window_get_root_layer(window), text_layer_get_layer(day_layer));
+  layer_add_child(window_get_root_layer(window), text_layer_get_layer(day_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
   
@@ -152,19 +152,19 @@ void handle_init(void) {
   handle_battery_change(battery_state_service_peek());
   
   // Push the window
-	window_stack_push(window, true);
+  window_stack_push(window, true);
   
   // subscribe to services
   connection_service_subscribe((ConnectionHandlers) {
     .pebble_app_connection_handler = handle_bt_change
   });
   battery_state_service_subscribe(handle_battery_change);
-	tick_timer_service_subscribe(MINUTE_UNIT, handle_time_change);  
+  tick_timer_service_subscribe(MINUTE_UNIT, handle_time_change);  
 }
 
 void handle_deinit(void) {
   text_layer_destroy(day_layer);
-	text_layer_destroy(time_layer);
+  text_layer_destroy(time_layer);
   text_layer_destroy(date_layer);
   text_layer_destroy(battery_layer);
 
