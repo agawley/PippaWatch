@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include "effect_layer.h"
 
 Window *window;
 TextLayer *battery_layer;
@@ -6,6 +7,7 @@ TextLayer *day_layer;
 TextLayer *time_layer;
 TextLayer *date_layer;
 BitmapLayer *bt_icon_layer;
+EffectLayer* inverter_layer;
 
 GFont helv_bold_lg;
 GFont helv_bold_sm;
@@ -138,12 +140,17 @@ void handle_init(void) {
   text_layer_set_font(date_layer, helv_bold_sm);
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
+  // Create the inverter layer
+  inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+  effect_layer_add_effect(inverter_layer, effect_invert, NULL);
+  
   // Add the layers to the window
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bt_icon_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(battery_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(day_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
+  layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
   
   // set the time, BT
   time_t now = time(NULL);
@@ -167,6 +174,7 @@ void handle_deinit(void) {
   text_layer_destroy(time_layer);
   text_layer_destroy(date_layer);
   text_layer_destroy(battery_layer);
+  effect_layer_destroy(inverter_layer);
 
   gbitmap_destroy(bt_icon_bitmap);
   bitmap_layer_destroy(bt_icon_layer);
