@@ -3,7 +3,7 @@ Pebble.addEventListener('ready', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'https://gawley.net/config.html';
+  var url = 'https://gawley.net/vsw/config.html';
   console.log('Showing configuration page: ' + url);
 
   Pebble.openURL(url);
