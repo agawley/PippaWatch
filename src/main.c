@@ -1,7 +1,7 @@
 #include <pebble.h>
 #include "effect_layer.h"
 
-#define INVERTED_KEY 1
+#define KEY_INVERTED 0
 
 Window *window;
 TextLayer *battery_layer;
@@ -152,8 +152,8 @@ void handle_init(void) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
   
   // If we are inverting, then invert!
-  if (persist_exists(INVERTED_KEY)) {
-    inverted = persist_read_int(INVERTED_KEY);
+  if (persist_exists(KEY_INVERTED)) {
+    inverted = persist_read_int(KEY_INVERTED);
   }
   if (inverted) {
     // Create the inverter layer
@@ -203,7 +203,7 @@ void handle_deinit(void) {
   fonts_unload_custom_font(helv_bold_xsm);
   
   // save state
-  persist_write_bool(INVERTED_KEY, true);
+  persist_write_bool(KEY_INVERTED, true);
   
   window_destroy(window);
 }
