@@ -1,8 +1,5 @@
 #include <pebble.h>
-#include "effects.h"  
-  
-// { ********* Graphics utility functions (probablu should be seaparated into anothe file?) *********
-  
+#include "effects.h"   
   
 // set pixel color at given coordinates 
 void set_pixel(BitmapInfo bitmap_info, int y, int x, uint8_t color) {
@@ -50,13 +47,10 @@ uint8_t get_pixel(BitmapInfo bitmap_info, int y, int x) {
      #endif  
   }
   
-}  
-
-//  ********* Graphics utility functions (probablu should be seaparated into anothe file?) ********* }
-
+}
   
 
-// inverter effect.
+// inverter effect. inverts everything except GColorRed.
 void effect_invert(GContext* ctx,  GRect position, void* param) {
   //capturing framebuffer bitmap
   GBitmap *fb = graphics_capture_frame_buffer(ctx);
@@ -70,7 +64,8 @@ void effect_invert(GContext* ctx,  GRect position, void* param) {
   for (int y = 0; y < position.size.h; y++)
      for (int x = 0; x < position.size.w; x++)
         #ifdef PBL_COLOR // on Basalt simple doing NOT on entire returned byte/pixel
-          set_pixel(bitmap_info, y + position.origin.y, x + position.origin.x, (~get_pixel(bitmap_info, y + position.origin.y, x + position.origin.x))|11000000);
+          if (get_pixel(bitmap_info, y + position.origin.y, x + position.origin.x) != GColorRedARGB8) // on don't change GColorRed
+             set_pixel(bitmap_info, y + position.origin.y, x + position.origin.x, (~get_pixel(bitmap_info, y + position.origin.y, x + position.origin.x))|11000000);
         #else // on Aplite since only 1 and 0 is returning, doing "not" by 1 - pixel
           set_pixel(bitmap_info, y + position.origin.y, x + position.origin.x, 1 - get_pixel(bitmap_info, y + position.origin.y, x + position.origin.x));
         #endif
