@@ -1,7 +1,9 @@
 {
-    "appKeys": {},
+    "appKeys": {
+        "KEY_INVERTED": 0
+    },
     "capabilities": [
-        ""
+        "configurable"
     ],
     "companyName": "gawley@gmail.com",
     "longName": "Very Simple Watch",

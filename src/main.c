@@ -1,6 +1,8 @@
 #include <pebble.h>
 #include "effect_layer.h"
 
+#define INVERTED_KEY 1
+
 Window *window;
 TextLayer *battery_layer;
 TextLayer *day_layer;
@@ -18,6 +20,8 @@ GBitmap *bt_icon_bitmap;
 
 int SCREEN_WIDTH = PBL_IF_RECT_ELSE(144, 180);
 int SCREEN_HEIGHT = PBL_IF_RECT_ELSE(168, 180);
+
+bool inverted = false;
 
 void handle_time_change(struct tm *tick_time, TimeUnits units_changed) {
     
@@ -139,18 +143,24 @@ void handle_init(void) {
   text_layer_set_text_color(date_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
   text_layer_set_font(date_layer, helv_bold_sm);
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
-  
-  // Create the inverter layer
-  inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
-  effect_layer_add_effect(inverter_layer, effect_invert, NULL);
-  
+    
   // Add the layers to the window
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bt_icon_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(battery_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(day_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
-  layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
+  
+  // If we are inverting, then invert!
+  if (persist_exists(INVERTED_KEY)) {
+    inverted = persist_read_int(INVERTED_KEY);
+  }
+  if (inverted) {
+    // Create the inverter layer
+    inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+    effect_layer_add_effect(inverter_layer, effect_invert, NULL);
+    layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
+  }
   
   // set the time, BT
   time_t now = time(NULL);
@@ -170,6 +180,8 @@ void handle_init(void) {
 }
 
 void handle_deinit(void) {
+  
+  // destroy layers
   text_layer_destroy(day_layer);
   text_layer_destroy(time_layer);
   text_layer_destroy(date_layer);
@@ -189,6 +201,9 @@ void handle_deinit(void) {
   fonts_unload_custom_font(helv_bold_sm);
   fonts_unload_custom_font(helv_xsm);
   fonts_unload_custom_font(helv_bold_xsm);
+  
+  // save state
+  persist_write_bool(INVERTED_KEY, true);
   
   window_destroy(window);
 }
