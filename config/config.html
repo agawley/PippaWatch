@@ -82,7 +82,7 @@
 
   (function() {
     var inverted = document.getElementById('inverted');
-    inverted.checked = localStorage['inverted'];
+    inverted.checked = JSON.parse(localStorage['inverted']);
   })();
   </script>
 </html>
