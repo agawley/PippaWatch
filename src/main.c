@@ -82,6 +82,35 @@ void handle_battery_change(BatteryChargeState charge_state) {
   }
 }
 
+void possibly_invert() {
+  if (inverted) {
+    layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
+  } else {
+    layer_remove_from_parent(effect_layer_get_layer(inverter_layer));
+  }
+}
+
+static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
+  Tuple *data = dict_find(iterator, KEY_INVERTED);
+  if (data) {
+    inverted = data->value->uint8;
+    possibly_invert();
+  }
+}
+
+static void inbox_dropped_callback(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
+}
+
+static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
+}
+
+static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
+}
+
+
 void handle_init(void) {
   
   int MARGIN = PBL_IF_RECT_ELSE(2, 8);
@@ -143,6 +172,10 @@ void handle_init(void) {
   text_layer_set_text_color(date_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
   text_layer_set_font(date_layer, helv_bold_sm);
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
+  
+  // Create the inverter layer
+  inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+  effect_layer_add_effect(inverter_layer, effect_invert, NULL);
     
   // Add the layers to the window
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bt_icon_layer));
@@ -151,14 +184,11 @@ void handle_init(void) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
   
-  // If we are inverting, then invert!
+  // Load inverted key
   if (persist_exists(KEY_INVERTED)) {
-    inverted = persist_read_int(KEY_INVERTED);
+    inverted = persist_read_bool(KEY_INVERTED);
   }
   if (inverted) {
-    // Create the inverter layer
-    inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
-    effect_layer_add_effect(inverter_layer, effect_invert, NULL);
     layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
   }
   
@@ -177,6 +207,16 @@ void handle_init(void) {
   });
   battery_state_service_subscribe(handle_battery_change);
   tick_timer_service_subscribe(MINUTE_UNIT, handle_time_change);  
+  
+  // Register message callbacks
+  app_message_register_inbox_received(inbox_received_callback);
+  app_message_register_inbox_dropped(inbox_dropped_callback);
+  app_message_register_outbox_failed(outbox_failed_callback);
+  app_message_register_outbox_sent(outbox_sent_callback);
+  
+  // Open AppMessage with sensible buffer sizes
+  app_message_open(64, 64);
+  
 }
 
 void handle_deinit(void) {
@@ -201,9 +241,9 @@ void handle_deinit(void) {
   fonts_unload_custom_font(helv_bold_sm);
   fonts_unload_custom_font(helv_xsm);
   fonts_unload_custom_font(helv_bold_xsm);
-  
+    
   // save state
-  persist_write_bool(KEY_INVERTED, true);
+  persist_write_bool(KEY_INVERTED, inverted);
   
   window_destroy(window);
 }
