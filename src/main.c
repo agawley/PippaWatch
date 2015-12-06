@@ -16,6 +16,8 @@ GFont helv_bold_sm;
 GFont helv_bold_xsm;
 GFont helv_xsm;
 
+GFont battery_default_font;
+
 GBitmap *bt_icon_bitmap;
 
 int SCREEN_WIDTH = PBL_IF_RECT_ELSE(144, 180);
@@ -73,21 +75,25 @@ void handle_battery_change(BatteryChargeState charge_state) {
   }
   text_layer_set_text(battery_layer, s_battery_buffer);
   if (charge_state.charge_percent <= 10) {
-    vibes_short_pulse();
+    // vibes_short_pulse();
     text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorRed, GColorBlack));
     text_layer_set_font(battery_layer, helv_bold_xsm);
   } else {
     text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
-    text_layer_set_font(battery_layer, helv_xsm);
+    text_layer_set_font(battery_layer, battery_default_font);
   }
 }
 
 void possibly_invert() {
   if (inverted) {
+	  battery_default_font = helv_bold_xsm;
     layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
   } else {
+    battery_default_font = helv_xsm;
     layer_remove_from_parent(effect_layer_get_layer(inverter_layer));
   }
+  // sets the battery font to bold if inverted
+  handle_battery_change(battery_state_service_peek());
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
@@ -137,12 +143,13 @@ void handle_init(void) {
   helv_bold_xsm = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_HELV_BOLD_12));
   helv_bold_sm = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_HELV_BOLD_16));
   helv_bold_lg = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_HELV_BOLD_SUBSET_48));
+  battery_default_font = helv_xsm;
   
   // Create the battery layer
   battery_layer = text_layer_create(GRect(battery_x_pos, battery_y_pos, battery_width, battery_height));
   text_layer_set_text(battery_layer, "N/A");
   text_layer_set_background_color(battery_layer, GColorClear);
-  text_layer_set_font(battery_layer, helv_xsm);
+  text_layer_set_font(battery_layer, battery_default_font);
   text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
   text_layer_set_text_alignment(battery_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight, GTextAlignmentCenter));
   
@@ -190,6 +197,7 @@ void handle_init(void) {
   }
   if (inverted) {
     layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
+    //battery_default_font = helv_bold_xsm;
   }
   
   // set the time, BT
