@@ -34,5 +34,6 @@ build/
 ._*
 .Spotlight-V100
 .Trashes
+.lock-waf_darwin_build
 ehthumbs.db
 Thumbs.db
