@@ -16,8 +16,6 @@ GFont helv_bold_sm;
 GFont helv_bold_xsm;
 GFont helv_xsm;
 
-GFont battery_default_font;
-
 GBitmap *bt_icon_bitmap;
 
 int SCREEN_WIDTH = PBL_IF_RECT_ELSE(144, 180);
@@ -75,47 +73,14 @@ void handle_battery_change(BatteryChargeState charge_state) {
   }
   text_layer_set_text(battery_layer, s_battery_buffer);
   if (charge_state.charge_percent <= 10) {
-    // vibes_short_pulse();
+    //vibes_short_pulse();
     text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorRed, GColorBlack));
     text_layer_set_font(battery_layer, helv_bold_xsm);
   } else {
     text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
-    text_layer_set_font(battery_layer, battery_default_font);
+    text_layer_set_font(battery_layer, helv_xsm);
   }
 }
-
-void possibly_invert() {
-  if (inverted) {
-	  battery_default_font = helv_bold_xsm;
-    layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
-  } else {
-    battery_default_font = helv_xsm;
-    layer_remove_from_parent(effect_layer_get_layer(inverter_layer));
-  }
-  // sets the battery font to bold if inverted
-  handle_battery_change(battery_state_service_peek());
-}
-
-static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  Tuple *data = dict_find(iterator, KEY_INVERTED);
-  if (data) {
-    inverted = data->value->uint8;
-    possibly_invert();
-  }
-}
-
-static void inbox_dropped_callback(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Message dropped!");
-}
-
-static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Outbox send failed!");
-}
-
-static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
-}
-
 
 void handle_init(void) {
   
@@ -143,13 +108,12 @@ void handle_init(void) {
   helv_bold_xsm = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_HELV_BOLD_12));
   helv_bold_sm = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_HELV_BOLD_16));
   helv_bold_lg = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_HELV_BOLD_SUBSET_48));
-  battery_default_font = helv_xsm;
   
   // Create the battery layer
   battery_layer = text_layer_create(GRect(battery_x_pos, battery_y_pos, battery_width, battery_height));
   text_layer_set_text(battery_layer, "N/A");
   text_layer_set_background_color(battery_layer, GColorClear);
-  text_layer_set_font(battery_layer, battery_default_font);
+  text_layer_set_font(battery_layer, helv_xsm);
   text_layer_set_text_color(battery_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
   text_layer_set_text_alignment(battery_layer, PBL_IF_RECT_ELSE(GTextAlignmentRight, GTextAlignmentCenter));
   
@@ -179,10 +143,6 @@ void handle_init(void) {
   text_layer_set_text_color(date_layer, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
   text_layer_set_font(date_layer, helv_bold_sm);
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
-  
-  // Create the inverter layer
-  inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
-  effect_layer_add_effect(inverter_layer, effect_invert, NULL);
     
   // Add the layers to the window
   layer_add_child(window_get_root_layer(window), bitmap_layer_get_layer(bt_icon_layer));
@@ -191,13 +151,15 @@ void handle_init(void) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
   
-  // Load inverted key
+  // If we are inverting, then invert!
   if (persist_exists(KEY_INVERTED)) {
-    inverted = persist_read_bool(KEY_INVERTED);
+    inverted = persist_read_int(KEY_INVERTED);
   }
   if (inverted) {
+    // Create the inverter layer
+    inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+    effect_layer_add_effect(inverter_layer, effect_invert, NULL);
     layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
-    //battery_default_font = helv_bold_xsm;
   }
   
   // set the time, BT
@@ -215,16 +177,6 @@ void handle_init(void) {
   });
   battery_state_service_subscribe(handle_battery_change);
   tick_timer_service_subscribe(MINUTE_UNIT, handle_time_change);  
-  
-  // Register message callbacks
-  app_message_register_inbox_received(inbox_received_callback);
-  app_message_register_inbox_dropped(inbox_dropped_callback);
-  app_message_register_outbox_failed(outbox_failed_callback);
-  app_message_register_outbox_sent(outbox_sent_callback);
-  
-  // Open AppMessage with sensible buffer sizes
-  app_message_open(64, 64);
-  
 }
 
 void handle_deinit(void) {
@@ -249,9 +201,9 @@ void handle_deinit(void) {
   fonts_unload_custom_font(helv_bold_sm);
   fonts_unload_custom_font(helv_xsm);
   fonts_unload_custom_font(helv_bold_xsm);
-    
+  
   // save state
-  persist_write_bool(KEY_INVERTED, inverted);
+  persist_write_bool(KEY_INVERTED, true);
   
   window_destroy(window);
 }

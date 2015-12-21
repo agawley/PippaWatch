@@ -13,7 +13,7 @@
             {
                 "file": "images/bt-icon.png",
                 "name": "IMAGE_BT_ICON",
-                "type": "png"
+                "type": "bitmap"
             },
             {
                 "file": "fonts/HelveticaNeue.ttf",
@@ -21,9 +21,8 @@
                 "type": "font"
             },
             {
-                "characterRegex": "[0-9: ]",
                 "file": "fonts/HelveticaNeue-Bold.ttf",
-                "name": "FONT_HELV_BOLD_SUBSET_48",
+                "name": "FONT_HELV_BOLD_12",
                 "type": "font"
             },
             {
@@ -32,8 +31,9 @@
                 "type": "font"
             },
             {
+                "characterRegex": "[0-9: ]",
                 "file": "fonts/HelveticaNeue-Bold.ttf",
-                "name": "FONT_HELV_BOLD_12",
+                "name": "FONT_HELV_BOLD_SUBSET_48",
                 "type": "font"
             }
         ]
