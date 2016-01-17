@@ -8,7 +8,9 @@ TextLayer *battery_layer;
 TextLayer *day_layer;
 TextLayer *time_layer;
 TextLayer *date_layer;
+Layer *step_gfx_layer;
 BitmapLayer *bt_icon_layer;
+
 EffectLayer* inverter_layer;
 
 GFont helv_bold_lg;
@@ -83,6 +85,22 @@ void handle_battery_change(BatteryChargeState charge_state) {
     text_layer_set_font(battery_layer, battery_default_font);
   }
 }
+
+void draw_steps_proc(Layer *layer, GContext *ctx) {
+  int step_guide_padding = 6;
+  int step_bar_padding = step_guide_padding;
+  graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorLightGray, GColorWhite));
+  graphics_draw_circle(ctx, GPoint(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), (SCREEN_HEIGHT / 2) - step_guide_padding);
+  graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
+  graphics_context_set_stroke_width(ctx, 3);
+  graphics_draw_arc(ctx, 
+                    GRect(step_bar_padding, step_bar_padding, SCREEN_WIDTH - (2 * step_bar_padding), SCREEN_HEIGHT - (2 * step_bar_padding)), 
+                    GOvalScaleModeFitCircle, 
+                    0, 
+                    DEG_TO_TRIGANGLE(90));
+  
+}
+ 
 
 void possibly_invert() {
   if (inverted) {
@@ -180,6 +198,10 @@ void handle_init(void) {
   text_layer_set_font(date_layer, helv_bold_sm);
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
+  // Create the graphics layer for steps
+  step_gfx_layer = layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+  layer_set_update_proc(step_gfx_layer, draw_steps_proc);
+  
   // Create the inverter layer
   inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
   effect_layer_add_effect(inverter_layer, effect_invert, NULL);
@@ -190,6 +212,7 @@ void handle_init(void) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(day_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
+  layer_add_child(window_get_root_layer(window), step_gfx_layer);
   
   // Load inverted key
   if (persist_exists(KEY_INVERTED)) {
@@ -234,6 +257,7 @@ void handle_deinit(void) {
   text_layer_destroy(time_layer);
   text_layer_destroy(date_layer);
   text_layer_destroy(battery_layer);
+  layer_destroy(step_gfx_layer);
   effect_layer_destroy(inverter_layer);
 
   gbitmap_destroy(bt_icon_bitmap);
