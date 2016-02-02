@@ -87,14 +87,20 @@ void handle_battery_change(BatteryChargeState charge_state) {
 }
 
 void draw_steps_proc(Layer *layer, GContext *ctx) {
-  int step_guide_padding = 6;
-  int step_bar_padding = step_guide_padding;
+  int step_padding = 4;
+  
+  GPath *s_my_path_ptr = NULL;
+  GPathInfo BOLT_PATH_INFO = {
+    .num_points = 4,
+    .points = (GPoint []) {{0, 0}, {SCREEN_WIDTH, 0}, {SCREEN_WIDTH, SCREEN_HEIGHT}, {0, SCREEN_HEIGHT}}
+  };
+  
   graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorLightGray, GColorWhite));
-  graphics_draw_circle(ctx, GPoint(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), (SCREEN_HEIGHT / 2) - step_guide_padding);
+  graphics_draw_circle(ctx, GPoint(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), (SCREEN_WIDTH / 2) - step_padding);
   graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
   graphics_context_set_stroke_width(ctx, 3);
   graphics_draw_arc(ctx, 
-                    GRect(step_bar_padding, step_bar_padding, SCREEN_WIDTH - (2 * step_bar_padding), SCREEN_HEIGHT - (2 * step_bar_padding)), 
+                    GRect(step_padding, step_padding, SCREEN_WIDTH - (2 * step_padding), SCREEN_HEIGHT - (2 * step_padding)), 
                     GOvalScaleModeFitCircle, 
                     0, 
                     DEG_TO_TRIGANGLE(90));
