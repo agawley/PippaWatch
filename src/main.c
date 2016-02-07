@@ -25,6 +25,9 @@ GBitmap *bt_icon_bitmap;
 int SCREEN_WIDTH = PBL_IF_RECT_ELSE(144, 180);
 int SCREEN_HEIGHT = PBL_IF_RECT_ELSE(168, 180);
 
+int STEP_TARGET = 10000;
+int steps_today = 1000;
+
 bool inverted = false;
 
 void handle_time_change(struct tm *tick_time, TimeUnits units_changed) {
@@ -86,6 +89,21 @@ void handle_battery_change(BatteryChargeState charge_state) {
   }
 }
 
+static void handle_health_change(HealthEventType event, void *context) {
+  // Which type of event occured?
+  switch(event) {
+    case HealthEventSleepUpdate:
+      APP_LOG(APP_LOG_LEVEL_INFO, 
+              "New HealthService HealthEventSleepUpdate event");
+      break;
+    default:
+      APP_LOG(APP_LOG_LEVEL_INFO, 
+              "New HealthService HealthEventSignificantUpdate event");
+      steps_today = health_service_sum_today(HealthMetricStepCount);
+      break;
+  }
+}
+
 void draw_steps_proc(Layer *layer, GContext *ctx) {
   int step_guide_padding = 6;
   int step_bar_padding = step_guide_padding;
@@ -97,7 +115,7 @@ void draw_steps_proc(Layer *layer, GContext *ctx) {
                     GRect(step_bar_padding, step_bar_padding, SCREEN_WIDTH - (2 * step_bar_padding), SCREEN_HEIGHT - (2 * step_bar_padding)), 
                     GOvalScaleModeFitCircle, 
                     0, 
-                    DEG_TO_TRIGANGLE(90));
+                    DEG_TO_TRIGANGLE((steps_today / STEP_TARGET) * 360));
   
 }
  
@@ -198,10 +216,6 @@ void handle_init(void) {
   text_layer_set_font(date_layer, helv_bold_sm);
   text_layer_set_text_alignment(date_layer, GTextAlignmentCenter);
   
-  // Create the graphics layer for steps
-  step_gfx_layer = layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
-  layer_set_update_proc(step_gfx_layer, draw_steps_proc);
-  
   // Create the inverter layer
   inverter_layer = effect_layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
   effect_layer_add_effect(inverter_layer, effect_invert, NULL);
@@ -212,7 +226,14 @@ void handle_init(void) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(day_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
-  layer_add_child(window_get_root_layer(window), step_gfx_layer);
+  
+  // Create the graphics layer for steps
+  if(!health_service_events_subscribe(handle_health_change, NULL)) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+    step_gfx_layer = layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+    layer_set_update_proc(step_gfx_layer, draw_steps_proc);
+    layer_add_child(window_get_root_layer(window), step_gfx_layer);
+  }
   
   // Load inverted key
   if (persist_exists(KEY_INVERTED)) {

@@ -3,7 +3,8 @@
         "KEY_INVERTED": 0
     },
     "capabilities": [
-        "configurable"
+        "configurable",
+        "health"
     ],
     "companyName": "gawley@gmail.com",
     "longName": "Very Simple Watch",
