@@ -2,6 +2,7 @@
 #include "effect_layer.h"
 
 #define KEY_INVERTED 0
+#define KEY_STEP_TARGET 1
 
 Window *window;
 TextLayer *battery_layer;
@@ -25,8 +26,8 @@ GBitmap *bt_icon_bitmap;
 int SCREEN_WIDTH = PBL_IF_RECT_ELSE(144, 180);
 int SCREEN_HEIGHT = PBL_IF_RECT_ELSE(168, 180);
 
-float STEP_TARGET = 10000.0;
-int steps_today = 1000;
+float step_target = 10000.0;
+int steps_today = 0;
 
 bool inverted = false;
 
@@ -89,14 +90,22 @@ void handle_battery_change(BatteryChargeState charge_state) {
   }
 }
 
+#if defined(PBL_HEALTH)
 static void handle_health_change(HealthEventType event, void *context) {
   steps_today = health_service_sum_today(HealthMetricStepCount);
 }
+#endif
 
 void draw_steps_proc(Layer *layer, GContext *ctx) {
     
-  int step_padding = 4;
+  float progress = (steps_today / step_target) > 1 ? 1 : steps_today / step_target;
+  
+  APP_LOG(APP_LOG_LEVEL_INFO, "Step target: %d", (int)step_target);
+  APP_LOG(APP_LOG_LEVEL_INFO, "Step today: %d", (int)steps_today);
+  APP_LOG(APP_LOG_LEVEL_INFO, "progress: %d", (int)(progress * 100));
     
+  #if defined(PBL_ROUND)
+  int step_padding = 8;
   graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorLightGray, GColorWhite));
   graphics_draw_circle(ctx, GPoint(SCREEN_WIDTH / 2, SCREEN_HEIGHT / 2), (SCREEN_WIDTH / 2) - step_padding);
   graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
@@ -105,11 +114,20 @@ void draw_steps_proc(Layer *layer, GContext *ctx) {
                     GRect(step_padding, step_padding, SCREEN_WIDTH - (2 * step_padding), SCREEN_HEIGHT - (2 * step_padding)), 
                     GOvalScaleModeFitCircle, 
                     0, 
-                    DEG_TO_TRIGANGLE((steps_today / STEP_TARGET) * 360));
+                    DEG_TO_TRIGANGLE(progress * 360));
+  #else
+  int step_padding = 8;
+  int line_width = SCREEN_WIDTH - (step_padding * 2);
+  int line_y_pos = SCREEN_HEIGHT-step_padding;
+  graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorLightGray, GColorWhite));
+  graphics_context_set_stroke_width(ctx, 6);
+  graphics_draw_line(ctx, GPoint(step_padding, line_y_pos), GPoint(line_width + step_padding, line_y_pos));
+  graphics_context_set_stroke_color(ctx, COLOR_FALLBACK(GColorDarkGray, GColorBlack));
+  graphics_draw_line(ctx, GPoint(step_padding, line_y_pos), GPoint(step_padding + (line_width * progress), line_y_pos));
+  #endif
   
 }
  
-
 void possibly_invert() {
   if (inverted) {
 	  battery_default_font = helv_bold_xsm;
@@ -123,10 +141,16 @@ void possibly_invert() {
 }
 
 static void inbox_received_callback(DictionaryIterator *iterator, void *context) {
-  Tuple *data = dict_find(iterator, KEY_INVERTED);
-  if (data) {
-    inverted = data->value->uint8;
+  Tuple *inverted_data = dict_find(iterator, KEY_INVERTED);
+  if (inverted_data) {
+    inverted = inverted_data->value->uint8;
     possibly_invert();
+  }
+  Tuple *step_data = dict_find(iterator, KEY_STEP_TARGET);
+  if (step_data) {
+    step_target = (float)step_data->value->uint16;
+    APP_LOG(APP_LOG_LEVEL_INFO, "Step target: %d", (int)step_target);
+    layer_mark_dirty(step_gfx_layer);
   }
 }
 
@@ -153,7 +177,7 @@ void handle_init(void) {
   int day_y_pos = time_y_pos - day_height; // above time
   int date_height = 20;
   int date_y_pos = time_y_pos + time_height; // below time
-  int battery_height = 24;
+  int battery_height = 30;
   int battery_x_pos = MARGIN;
   int battery_y_pos = PBL_IF_RECT_ELSE(MARGIN, SCREEN_HEIGHT - battery_height);
   int battery_width = SCREEN_WIDTH - (MARGIN * 2);
@@ -217,12 +241,18 @@ void handle_init(void) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
   
+  //TODO: Need to make this respect the permission settng of Health on the phone
   // Create the graphics layer for steps
   #if defined(PBL_HEALTH)
   // Attempt to subscribe 
+  APP_LOG(APP_LOG_LEVEL_INFO, "Attempting subscribe!");
   if(!health_service_events_subscribe(handle_health_change, NULL)) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Health service not available!");
   } else {
+    APP_LOG(APP_LOG_LEVEL_INFO, "Health success!");
+    if (persist_exists(KEY_STEP_TARGET)) {
+      step_target = (float)persist_read_int(KEY_STEP_TARGET);
+    }
     step_gfx_layer = layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
     layer_set_update_proc(step_gfx_layer, draw_steps_proc);
     layer_add_child(window_get_root_layer(window), step_gfx_layer);
@@ -281,6 +311,7 @@ void handle_deinit(void) {
   battery_state_service_unsubscribe();
   connection_service_unsubscribe();
   tick_timer_service_unsubscribe();
+  health_service_events_unsubscribe();
   
   // Unload fonts
   fonts_unload_custom_font(helv_bold_lg);
@@ -290,6 +321,7 @@ void handle_deinit(void) {
     
   // save state
   persist_write_bool(KEY_INVERTED, inverted);
+  persist_write_int(KEY_STEP_TARGET, step_target);
   
   window_destroy(window);
 }

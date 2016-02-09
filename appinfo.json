@@ -1,10 +1,10 @@
 {
     "appKeys": {
-        "KEY_INVERTED": 0
+        "KEY_INVERTED": 0,
+        "KEY_STEP_TARGET": 1
     },
     "capabilities": [
-        "configurable",
-        "health"
+        "configurable"
     ],
     "companyName": "gawley@gmail.com",
     "longName": "Very Simple Watch",
