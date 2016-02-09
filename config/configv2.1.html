@@ -29,16 +29,20 @@
     </div>
 
     <div class='item-container'>
-      <div class='item-container-header'>Look and feel</div>
+      <div class='item-container-header'>Appearance</div>
       <div class='item-container-content'>
         <label class='item'>
           Black background
           <input id='inverted' type="checkbox" class="item-toggle">
         </label>
+        <label class='item'>
+          Show step count
+          <input id='show_step_count' type="checkbox" class="item-toggle" checked on>
+        </label>
       </div>
     </div>
     
-    <div class="item-container">
+    <div class="item-container" id="step_target_container">
       <div class="item-container-header">Pebble Health Step Target</div>
       <div class="item-container-content">
         <label class="item">
@@ -59,15 +63,18 @@
   <script>
   function getConfigData() {
     var inverted = document.getElementById('inverted');
+    var show_step_count = document.getElementById('show_step_count');
     var step_target = document.getElementById('step_target');
  
     var options = {
       'inverted': inverted.checked,
+      'show_step_count': show_step_count.checked,
       'step_target': step_target.value
     };
 
     // Save for next launch
     localStorage['inverted'] = options['inverted'];
+    localStorage['show_step_count'] = options['show_step_count'];
     localStorage['step_target'] = options['step_target'];
 
     console.log('Got options: ' + JSON.stringify(options));
@@ -98,6 +105,16 @@
   (function() {
     var inverted = document.getElementById('inverted');
     inverted.checked = JSON.parse(localStorage['inverted']);
+    var show_step_count = document.getElementById('show_step_count');
+    var step_target_container = document.getElementById('step_target_container');
+    show_step_count.addEventListener('change', 
+                                     function() {
+                                       var show = show_step_count.checked ? "block" : "none";
+                                       document.getElementById('step_target_container').style.display = show;
+                                     }, false);
+    show_step_count.checked = JSON.parse(localStorage['show_step_count']);
+    var show = show_step_count.checked ? "block" : "none";
+    document.getElementById('step_target_container').style.display = show;
     var step_target = document.getElementById('step_target');
     step_target.value = JSON.parse(localStorage['step_target']);
     var step_target_slider = document.getElementById('step_target_slider');

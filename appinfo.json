@@ -1,7 +1,8 @@
 {
     "appKeys": {
         "KEY_INVERTED": 0,
-        "KEY_STEP_TARGET": 1
+        "KEY_SHOW_STEP_COUNT": 1,
+        "KEY_STEP_TARGET": 2
     },
     "capabilities": [
         "configurable"

@@ -2,7 +2,9 @@
 #include "effect_layer.h"
 
 #define KEY_INVERTED 0
-#define KEY_STEP_TARGET 1
+#define KEY_SHOW_STEP_COUNT 1
+#define KEY_STEP_TARGET 2
+
 
 Window *window;
 TextLayer *battery_layer;
@@ -30,6 +32,7 @@ float step_target = 10000.0;
 int steps_today = 0;
 
 bool inverted = false;
+bool show_step_count = true;
 
 void handle_time_change(struct tm *tick_time, TimeUnits units_changed) {
     
@@ -92,7 +95,14 @@ void handle_battery_change(BatteryChargeState charge_state) {
 
 #if defined(PBL_HEALTH)
 static void handle_health_change(HealthEventType event, void *context) {
-  steps_today = health_service_sum_today(HealthMetricStepCount);
+  HealthServiceAccessibilityMask mask = health_service_metric_accessible(HealthMetricStepCount, 
+                                                                         time_start_of_today(),
+                                                                         time(NULL));
+  if(mask == HealthServiceAccessibilityMaskAvailable) {
+    steps_today = (int)health_service_sum_today(HealthMetricStepCount);
+  } else {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Data unavailable!");
+  }
 }
 #endif
 
@@ -152,6 +162,12 @@ static void inbox_received_callback(DictionaryIterator *iterator, void *context)
     APP_LOG(APP_LOG_LEVEL_INFO, "Step target: %d", (int)step_target);
     layer_mark_dirty(step_gfx_layer);
   }
+  Tuple *show_step_count_data = dict_find(iterator, KEY_SHOW_STEP_COUNT);
+  if (show_step_count_data) {
+    show_step_count = show_step_count_data->value->uint8;
+    layer_set_hidden(step_gfx_layer, !show_step_count);
+    layer_mark_dirty(step_gfx_layer);
+  }
 }
 
 static void inbox_dropped_callback(AppMessageResult reason, void *context) {
@@ -165,7 +181,6 @@ static void outbox_failed_callback(DictionaryIterator *iterator, AppMessageResul
 static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
   APP_LOG(APP_LOG_LEVEL_INFO, "Outbox send success!");
 }
-
 
 void handle_init(void) {
   
@@ -185,6 +200,8 @@ void handle_init(void) {
   int bt_width = 16;
   int bt_x_pos = PBL_IF_RECT_ELSE(MARGIN, (SCREEN_WIDTH / 2) - (bt_width / 2));
   int bt_y_pos = MARGIN;
+  
+  time_t now = time(NULL);
   
   window = window_create();
   
@@ -241,24 +258,33 @@ void handle_init(void) {
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(time_layer));
   layer_add_child(window_get_root_layer(window), text_layer_get_layer(date_layer));
   
-  //TODO: Need to make this respect the permission settng of Health on the phone
+  //TODO: Need to make this respect the permission setting of Health on the phone
   // Create the graphics layer for steps
+  step_gfx_layer = layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
+  layer_set_update_proc(step_gfx_layer, draw_steps_proc);
+  layer_add_child(window_get_root_layer(window), step_gfx_layer);
+  
+  if (persist_exists(KEY_SHOW_STEP_COUNT)) {
+    show_step_count = persist_read_bool(KEY_SHOW_STEP_COUNT);
+  }
+  // attemt to subscribe to the health service
   #if defined(PBL_HEALTH)
-  // Attempt to subscribe 
-  APP_LOG(APP_LOG_LEVEL_INFO, "Attempting subscribe!");
-  if(!health_service_events_subscribe(handle_health_change, NULL)) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "Health service not available!");
-  } else {
-    APP_LOG(APP_LOG_LEVEL_INFO, "Health success!");
+  APP_LOG(APP_LOG_LEVEL_INFO, "Checking Health Permission");
+  if(!show_step_count
+     || (!(HealthServiceAccessibilityMaskNoPermission & health_service_metric_accessible(
+                                                        HealthMetricStepCount, now - 600, now))
+     && !health_service_events_subscribe(handle_health_change, NULL))) {
+    APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available (user)!");
+    layer_set_hidden(step_gfx_layer, true);
+  } else {  
+    APP_LOG(APP_LOG_LEVEL_INFO, "Showing Health");
     if (persist_exists(KEY_STEP_TARGET)) {
       step_target = (float)persist_read_int(KEY_STEP_TARGET);
     }
-    step_gfx_layer = layer_create(GRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT));
-    layer_set_update_proc(step_gfx_layer, draw_steps_proc);
-    layer_add_child(window_get_root_layer(window), step_gfx_layer);
+    layer_set_hidden(step_gfx_layer, false);
   }
   #else
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available!");
+  APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available (platform)!");
   #endif
   
   // Load inverted key
@@ -267,11 +293,9 @@ void handle_init(void) {
   }
   if (inverted) {
     layer_add_child(window_get_root_layer(window), effect_layer_get_layer(inverter_layer));
-    //battery_default_font = helv_bold_xsm;
   }
   
   // set the time, BT
-  time_t now = time(NULL);
   handle_time_change(localtime(&now), MINUTE_UNIT | DAY_UNIT);
   handle_bt_change(connection_service_peek_pebble_app_connection());
   handle_battery_change(battery_state_service_peek());
@@ -321,6 +345,7 @@ void handle_deinit(void) {
     
   // save state
   persist_write_bool(KEY_INVERTED, inverted);
+  persist_write_int(KEY_SHOW_STEP_COUNT, show_step_count);
   persist_write_int(KEY_STEP_TARGET, step_target);
   
   window_destroy(window);

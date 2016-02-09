@@ -3,7 +3,7 @@ Pebble.addEventListener('ready', function() {
 });
 
 Pebble.addEventListener('showConfiguration', function() {
-  var url = 'https://gawley.net/vsw/configv2.html';
+  var url = 'https://gawley.net/vsw/configv2.1.html';
   console.log('Showing configuration page: ' + url);
 
   Pebble.openURL(url);
@@ -15,6 +15,7 @@ Pebble.addEventListener('webviewclosed', function(e) {
 
   var dict = {};
   dict['KEY_INVERTED'] = configData['inverted'] ? 1 : 0;  // Send a boolean as an integer
+  dict['KEY_SHOW_STEP_COUNT'] = configData['show_step_count'] ? 1 : 0;  // Send a boolean as an integer
   dict['KEY_STEP_TARGET'] = parseInt(configData['step_target']);
   
   // Send to watchapp
