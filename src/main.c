@@ -304,6 +304,9 @@ void handle_init(void) {
   window_stack_push(window, true);
   
   // subscribe to services
+  connection_service_subscribe((ConnectionHandlers) {
+        .pebble_app_connection_handler = handle_bt_change
+      });
   battery_state_service_subscribe(handle_battery_change);
   tick_timer_service_subscribe(MINUTE_UNIT, handle_time_change);  
   
