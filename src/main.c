@@ -184,7 +184,7 @@ static void outbox_sent_callback(DictionaryIterator *iterator, void *context) {
 
 void handle_init(void) {
   
-  int MARGIN = PBL_IF_RECT_ELSE(2, 8);
+  int MARGIN = PBL_IF_RECT_ELSE(2, 12);
   
   int time_height = 60;
   int time_y_pos = (SCREEN_HEIGHT / 2) - (time_height / 2); // vertically centered
