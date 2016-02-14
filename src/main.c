@@ -284,6 +284,7 @@ void handle_init(void) {
     layer_set_hidden(step_gfx_layer, false);
   }
   #else
+  layer_set_hidden(step_gfx_layer, true);
   APP_LOG(APP_LOG_LEVEL_ERROR, "Health not available (platform)!");
   #endif
   
